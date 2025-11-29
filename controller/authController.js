@@ -133,8 +133,8 @@ try {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10,$11,$12,$13,$14)
      RETURNING user_id`,
     [
-      user_name, first_name, last_name, gender, phone_number, nin_number,
-      email, hashedPassword, address, account_type,
+      user_name, user_firstname, user_lastname, user_gender, user_phone, nin_number,
+      user_email, hashedPassword, address, account_type,
       business_name, business_type, CAC_number, business_location
     ]
   );
