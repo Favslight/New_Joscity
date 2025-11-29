@@ -70,7 +70,7 @@ exports.signup = async (req, res) => {
     // Check if email already exists
     const existingEmail = await db.query(
   'SELECT user_id FROM users WHERE user_email = $1',
-  [email]
+  [user_email]
 );
 
 
