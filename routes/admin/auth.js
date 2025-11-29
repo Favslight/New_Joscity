@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../../controllers/authController');
-const { adminAuth } = require('../../middleware/adminMiddleware');
+const { adminAuth } = require('../../middleware/authMiddleware');
 
 // Admin approval routes
 router.get('/pending', adminAuth, authController.getPendingApprovals);
