@@ -69,7 +69,7 @@ exports.signup = async (req, res) => {
 
     // Check if email already exists
     const existingEmail = await db.query(
-  'SELECT user_id FROM users WHERE user_email = $1',
+  'SELECT id FROM users WHERE user_email = $1',
   [user_email]
 );
 
@@ -84,7 +84,7 @@ exports.signup = async (req, res) => {
     // Check if NIN already exists (for personal accounts)
     if (account_type === 'personal' && nin_number) {
       const existingNIN = await db.query(
-  'SELECT user_id FROM users WHERE nin_number = $1',
+  'SELECT id FROM users WHERE nin_number = $1',
   [nin_number]
 );
 
@@ -100,7 +100,7 @@ exports.signup = async (req, res) => {
     // Check if business registration number exists (for business accounts)
     if (account_type === 'business' && business_reg_number) {
       const existingBusiness = await db.query(
-  'SELECT user_id FROM users WHERE CAC_number = $1',
+  'SELECT id FROM users WHERE CAC_number = $1',
   [CAC_number]
 );
 
