@@ -10,7 +10,7 @@ app.use(express.json());
 
 // Import routes
 const authRoutes = require('./routes/authRoute');
-const adminRoutes = require('./routes/admin');
+const adminRoutes = require('./routes/admin/adminAuth');
 
 // Use routes
 app.use('/api/auth', authRoutes);
