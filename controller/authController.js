@@ -25,13 +25,13 @@ const generateResetCode = () => {
 exports.signUp = async (req, res) => {
   try {
     const {
-      first_name,
-      last_name,
-      gender,
-      phone_number,
+      user_first_name,
+      user_last_name,
+      user_gender,
+      user_phone,
       nin_number,
-      email,
-      password,
+      user_email,
+      user_password,
       address,
       account_type = 'personal', // 'personal' or 'business'
       // Business-specific fields
@@ -42,7 +42,7 @@ exports.signUp = async (req, res) => {
     } = req.body;
 
     // Common validation
-    if (!first_name || !last_name || !gender || !phone_number || !email || !password || !address) {
+    if (!user_first_name || !user_last_name || !user_gender || !user_phone || !user_email || !user_password || !address) {
       return res.status(400).json({
         error: true,
         message: 'All basic fields are required'
