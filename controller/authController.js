@@ -22,7 +22,7 @@ const generateResetCode = () => {
 /**
  * User Registration - Submit for Review (Personal or Business)
  */
-exports.signUp = async (req, res) => {
+exports.signup = async (req, res) => {
   try {
     const {
       user_firstname,
@@ -162,7 +162,7 @@ try {
         `
         : `
           <h2>Registration Under Review</h2>
-          <p>Dear ${first_name} ${last_name},</p>
+          <p>Dear ${user_firstname} ${user_lastname},</p>
           <p>Your account registration has been received and is currently under review.</p>
           <p>We will verify your details and notify you once your account is approved.</p>
           <p>You will receive an activation code via email when your account is approved.</p>
@@ -170,7 +170,7 @@ try {
           <p>Thank you for your patience.</p>
         `;
 
-      await sendEmail(email, emailSubject, emailTemplate);
+      await sendEmail(user_email, emailSubject, emailTemplate);
 
       res.status(201).json({
         success: true,
