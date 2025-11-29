@@ -114,11 +114,11 @@ exports.signup = async (req, res) => {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const full_name = account_type === 'business' ? business_name : `${first_name} ${last_name}`;
+    const hashedPassword = await bcrypt.hash(user_password, 12);
+    const full_name = account_type === 'business' ? business_name : `${user_firstname} ${user_lastname}`;
     const user_name = account_type === 'business' 
       ? business_name.toLowerCase().replace(/\s+/g, '')
-      : `${first_name}${last_name}`.toLowerCase().replace(/\s+/g, '');
+      : `${user_firstname}${user_lastname}`.toLowerCase().replace(/\s+/g, '');
 
     // Start transaction
     const client = await db.connect();
