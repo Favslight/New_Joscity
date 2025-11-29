@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../config/database');
+const { query, getClient} = require('../config/database');
 const { sendEmail } = require('../config/emailConfig');
 
 // Helper function to generate activation code
@@ -17,7 +17,7 @@ const generateResetCode = () => {
  * User Registration - Submit for Review (Personal or Business)
  */
 exports.signup = async (req, res) => {
-  const client = await db.connect(); // Get client for transaction
+  const client = await getClient(); // Get client for transaction
   
   try {
     const {
