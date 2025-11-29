@@ -1,9 +1,3 @@
-// Start all over again, no need to create two different files for user account and business account
-// So we will start all over again
-
-// create a controller folder and create authController.js and write this code, it still works with the auth.js
-
-
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
@@ -23,6 +17,8 @@ const generateResetCode = () => {
  * User Registration - Submit for Review (Personal or Business)
  */
 exports.signup = async (req, res) => {
+  const client = await db.connect(); // Get client for transaction
+  
   try {
     const {
       user_firstname,
@@ -67,14 +63,17 @@ exports.signup = async (req, res) => {
       });
     }
 
+    await client.query('BEGIN'); // Start transaction
+
     // Check if email already exists
-    const existingEmail = await db.query(
-  'SELECT id FROM users WHERE user_email = $1',
-  [user_email]
-);
+    const existingEmail = await client.query(
+      'SELECT user_id FROM users WHERE user_email = $1',
+      [user_email]
+    );
 
-
-    if (existingEmail.length > 0) {
+    if (existingEmail.rows.length > 0) {
+      await client.query('ROLLBACK');
+      client.release();
       return res.status(400).json({
         error: true,
         message: 'Email already registered'
@@ -83,13 +82,14 @@ exports.signup = async (req, res) => {
 
     // Check if NIN already exists (for personal accounts)
     if (account_type === 'personal' && nin_number) {
-      const existingNIN = await db.query(
-  'SELECT id FROM users WHERE nin_number = $1',
-  [nin_number]
-);
+      const existingNIN = await client.query(
+        'SELECT user_id FROM users WHERE nin_number = $1',
+        [nin_number]
+      );
 
-
-      if (existingNIN.length > 0) {
+      if (existingNIN.rows.length > 0) {
+        await client.query('ROLLBACK');
+        client.release();
         return res.status(400).json({
           error: true,
           message: 'NIN number already registered'
@@ -98,14 +98,15 @@ exports.signup = async (req, res) => {
     }
 
     // Check if business registration number exists (for business accounts)
-    if (account_type === 'business' && business_reg_number) {
-      const existingBusiness = await db.query(
-  'SELECT id FROM users WHERE CAC_number = $1',
-  [CAC_number]
-);
+    if (account_type === 'business' && CAC_number) {
+      const existingBusiness = await client.query(
+        'SELECT user_id FROM users WHERE CAC_number = $1',
+        [CAC_number]
+      );
 
-
-      if (existingBusiness.length > 0) {
+      if (existingBusiness.rows.length > 0) {
+        await client.query('ROLLBACK');
+        client.release();
         return res.status(400).json({
           error: true,
           message: 'Business registration number already registered'
@@ -120,74 +121,64 @@ exports.signup = async (req, res) => {
       ? business_name.toLowerCase().replace(/\s+/g, '')
       : `${user_firstname}${user_lastname}`.toLowerCase().replace(/\s+/g, '');
 
-    // Start transaction
-    const client = await db.connect();
-try {
-  await client.query('BEGIN');
+    // Insert user
+    const userResult = await client.query(
+      `INSERT INTO users 
+       (user_name, user_firstname, user_lastname, user_gender, user_phone, nin_number, 
+        user_email, user_password, address, account_status, account_type, 
+        business_name, business_type, CAC_number, business_location)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending', $10, $11, $12, $13, $14)
+       RETURNING user_id`,
+      [
+        user_name, user_firstname, user_lastname, user_gender, user_phone, nin_number,
+        user_email, hashedPassword, address, account_type,
+        business_name, business_type, CAC_number, business_location
+      ]
+    );
 
-  const userResult = await client.query(
-    `INSERT INTO users 
-     (user_name, user_firstname, user_lastname, user_gender, user_phone, nin_number, 
-      user_email, user_password, address, account_status, account_type, 
-      business_name, business_type, CAC_number, business_location)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10,$11,$12,$13,$14)
-     RETURNING user_id`,
-    [
-      user_name, user_firstname, user_lastname, user_gender, user_phone, nin_number,
-      user_email, hashedPassword, address, account_type,
-      business_name, business_type, CAC_number, business_location
-    ]
-  );
+    await client.query('COMMIT');
+    client.release();
 
-  await client.query('COMMIT');
-  client.release();
+    const insertedId = userResult.rows[0].user_id;
 
-  const insertedId = userResult.rows[0].user_id;
+    // Send "under review" email to user
+    const emailSubject = account_type === 'business' 
+      ? 'Business Account Registration Under Review'
+      : 'Account Registration Under Review';
 
+    const emailTemplate = account_type === 'business' 
+      ? `
+        <h2>Business Registration Under Review</h2>
+        <p>Dear ${business_name},</p>
+        <p>Your business account registration has been received and is currently under review.</p>
+        <p>We will verify your business details and notify you once your account is approved.</p>
+        <p>You will receive an activation code via email when your account is approved.</p>
+        <br>
+        <p>Thank you for your patience.</p>
+      `
+      : `
+        <h2>Registration Under Review</h2>
+        <p>Dear ${user_firstname} ${user_lastname},</p>
+        <p>Your account registration has been received and is currently under review.</p>
+        <p>We will verify your details and notify you once your account is approved.</p>
+        <p>You will receive an activation code via email when your account is approved.</p>
+        <br>
+        <p>Thank you for your patience.</p>
+      `;
 
-      // Send "under review" email to user - NO ACTIVATION CODE IN THIS EMAIL
-      const emailSubject = account_type === 'business' 
-        ? 'Business Account Registration Under Review'
-        : 'Account Registration Under Review';
+    await sendEmail(user_email, emailSubject, emailTemplate);
 
-      const emailTemplate = account_type === 'business' 
-        ? `
-          <h2>Business Registration Under Review</h2>
-          <p>Dear ${business_name},</p>
-          <p>Your business account registration has been received and is currently under review.</p>
-          <p>We will verify your business details and notify you once your account is approved.</p>
-          <p>You will receive an activation code via email when your account is approved.</p>
-          <br>
-          <p>Thank you for your patience.</p>
-        `
-        : `
-          <h2>Registration Under Review</h2>
-          <p>Dear ${user_firstname} ${user_lastname},</p>
-          <p>Your account registration has been received and is currently under review.</p>
-          <p>We will verify your details and notify you once your account is approved.</p>
-          <p>You will receive an activation code via email when your account is approved.</p>
-          <br>
-          <p>Thank you for your patience.</p>
-        `;
-
-      await sendEmail(user_email, emailSubject, emailTemplate);
-
-      res.status(201).json({
-        success: true,
-        message: 'Registration submitted for review. You will receive an email once approved.',
-        user_id: userResult.insertId,
-        status: 'under_review',
-        account_type: account_type
-      });
-
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
-    }
+    res.status(201).json({
+      success: true,
+      message: 'Registration submitted for review. You will receive an email once approved.',
+      user_id: insertedId,
+      status: 'under_review',
+      account_type: account_type
+    });
 
   } catch (error) {
+    await client.query('ROLLBACK');
+    client.release();
     console.error('Signup error:', error);
     res.status(500).json({
       error: true,
@@ -197,23 +188,22 @@ try {
 };
 
 /**
- * Get Pending Approvals (For Admin) - Updated for both account types
+ * Get Pending Approvals (For Admin)
  */
 exports.getPendingApprovals = async (req, res) => {
   try {
     const pendingUsers = await db.query(
-  `SELECT u.user_id, u.user_name, u.user_firstname, u.user_lastname, u.user_phone, u.nin_number, 
-          u.user_email, u.address, u.user_registered, u.account_type,
-          u.business_name, u.business_type, u.CAC_number, u.business_location
-   FROM users u
-   WHERE u.account_status = 'pending'
-   ORDER BY u.user_registered DESC`
-);
-
+      `SELECT u.user_id, u.user_name, u.user_firstname, u.user_lastname, u.user_phone, u.nin_number, 
+              u.user_email, u.address, u.user_registered, u.account_type,
+              u.business_name, u.business_type, u.CAC_number, u.business_location
+       FROM users u
+       WHERE u.account_status = 'pending'
+       ORDER BY u.user_registered DESC`
+    );
 
     res.json({
       success: true,
-      data: pendingUsers
+      data: pendingUsers.rows
     });
 
   } catch (error) {
@@ -226,26 +216,25 @@ exports.getPendingApprovals = async (req, res) => {
 };
 
 /**
- * Admin Approve Account - Updated for both account types
+ * Admin Approve Account
  */
 exports.approveAccount = async (req, res) => {
   try {
     const { user_id } = req.body;
 
-    // Generate activation code (expires in 48 hours) - ONLY WHEN APPROVING
+    // Generate activation code (expires in 48 hours)
     const activationCode = generateActivationCode();
     const activationExpires = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
     // Update user status and set activation code
     const result = await db.query(
-  `UPDATE users 
-   SET account_status = 'approved',
-       activation_code = $1,
-       activation_expires = $2
-   WHERE user_id = $3 AND account_status = 'pending'`,
-  [activationCode, activationExpires, user_id]
-);
-
+      `UPDATE users 
+       SET account_status = 'approved',
+           activation_code = $1,
+           activation_expires = $2
+       WHERE user_id = $3 AND account_status = 'pending'`,
+      [activationCode, activationExpires, user_id]
+    );
 
     if (result.rowCount === 0) {
       return res.status(404).json({
@@ -255,15 +244,14 @@ exports.approveAccount = async (req, res) => {
     }
 
     // Get user details for email
-    const users = await db.query(
-  'SELECT user_email, user_firstname, user_lastname, account_type, business_name FROM users WHERE user_id = $1',
-  [user_id]
-);
+    const userResult = await db.query(
+      'SELECT user_email, user_firstname, user_lastname, account_type, business_name FROM users WHERE user_id = $1',
+      [user_id]
+    );
 
+    const user = userResult.rows[0];
 
-    const user = users[0];
-
-    // Send approval email with activation code - ONLY AFTER APPROVAL
+    // Send approval email with activation code
     const emailSubject = user.account_type === 'business'
       ? 'Business Account Approved - Activation Code'
       : 'Account Approved - Activation Code';
@@ -311,7 +299,7 @@ exports.approveAccount = async (req, res) => {
 };
 
 /**
- * Admin Reject Account - Updated for both account types
+ * Admin Reject Account
  */
 exports.rejectAccount = async (req, res) => {
   try {
@@ -319,14 +307,13 @@ exports.rejectAccount = async (req, res) => {
 
     // Update user status to rejected
     const result = await db.query(
-  `UPDATE users 
-   SET account_status = 'rejected'
-   WHERE user_id = $1 AND account_status = 'pending'`,
-  [user_id]
-);
+      `UPDATE users 
+       SET account_status = 'rejected'
+       WHERE user_id = $1 AND account_status = 'pending'`,
+      [user_id]
+    );
 
-
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         error: true,
         message: 'User not found or already processed'
@@ -334,13 +321,12 @@ exports.rejectAccount = async (req, res) => {
     }
 
     // Get user details for email
-    const users = await db.query(
-  'SELECT user_email, user_firstname, user_lastname, account_type, business_name FROM users WHERE user_id = $1',
-  [user_id]
-);
+    const userResult = await db.query(
+      'SELECT user_email, user_firstname, user_lastname, account_type, business_name FROM users WHERE user_id = $1',
+      [user_id]
+    );
 
-
-    const user = users[0];
+    const user = userResult.rows[0];
 
     // Send rejection email
     const recipientName = user.account_type === 'business'
@@ -375,30 +361,29 @@ exports.rejectAccount = async (req, res) => {
 };
 
 /**
- * User Login (After Approval) - Updated for both account types
+ * User Login (After Approval)
  */
 exports.signIn = async (req, res) => {
   try {
     const { email, password, activation_code } = req.body;
 
     // Find user
-    const users = await db.query(
-  `SELECT user_id, user_email, user_password, user_firstname, user_lastname,
-          account_status, activation_code, activation_expires, is_verified, account_type,
-          business_name, user_verified
-   FROM users WHERE user_email = $1`,
-  [email]
-);
+    const userResult = await db.query(
+      `SELECT user_id, user_email, user_password, user_firstname, user_lastname,
+              account_status, activation_code, activation_expires, is_verified, account_type,
+              business_name, user_verified
+       FROM users WHERE user_email = $1`,
+      [email]
+    );
 
-
-    if (users.row.length === 0) {
+    if (userResult.rows.length === 0) {
       return res.status(401).json({
         error: true,
         message: 'Invalid email or password'
       });
     }
 
-    const user = users.row[0];
+    const user = userResult.rows[0];
 
     // Check account status
     if (user.account_status === 'pending') {
@@ -445,10 +430,10 @@ exports.signIn = async (req, res) => {
     // Mark as verified on first successful login
     if (!user.is_verified) {
       await db.query(
-  'UPDATE users SET is_verified = 1, verified_at = NOW(), activation_code = NULL WHERE user_id = $1',
-  [user.user_id]
-);
-
+        'UPDATE users SET is_verified = true, verified_at = NOW(), activation_code = NULL WHERE user_id = $1',
+        [user.user_id]
+      );
+    }
 
     // Generate JWT token
     const token = jwt.sign(
@@ -467,7 +452,7 @@ exports.signIn = async (req, res) => {
       user_id: user.user_id,
       email: user.user_email,
       is_verified: true,
-      has_verified_badge: user.user_verified === '1',
+      has_verified_badge: user.user_verified === true,
       account_type: user.account_type
     };
 
@@ -487,8 +472,7 @@ exports.signIn = async (req, res) => {
       user: userResponse
     });
 
-  } 
-} catch (error) {
+  } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       error: true,
@@ -497,6 +481,7 @@ exports.signIn = async (req, res) => {
   }
 };
 
+// ... (The rest of your functions - forgotPassword, etc. need similar fixes)
 
 /**
  * Forgot Password - Request reset
@@ -505,15 +490,14 @@ exports.forgetPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const users = await db.query(
-  `SELECT user_id, user_firstname, user_lastname, business_name, account_type 
-   FROM users 
-   WHERE user_email = $1 AND account_status = 'approved'`,
-  [email]
-);
+    const userResult = await db.query(
+      `SELECT user_id, user_firstname, user_lastname, business_name, account_type 
+       FROM users 
+       WHERE user_email = $1 AND account_status = 'approved'`,
+      [email]
+    );
 
-
-    if (users.length === 0) {
+    if (userResult.rows.length === 0) {
       // Don't reveal if email exists or not for security
       return res.json({
         success: true,
@@ -521,15 +505,14 @@ exports.forgetPassword = async (req, res) => {
       });
     }
 
-    const user = users[0];
+    const user = userResult.rows[0];
     const resetCode = generateResetCode();
     const resetExpires = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
 
     await db.query(
-  'UPDATE users SET reset_code = $1, reset_expires = $2 WHERE user_id = $3',
-  [resetCode, resetExpires, user.user_id]
-);
-
+      'UPDATE users SET reset_code = $1, reset_expires = $2 WHERE user_id = $3',
+      [resetCode, resetExpires, user.user_id]
+    );
 
     const recipientName = user.account_type === 'business' 
       ? user.business_name 
@@ -571,13 +554,12 @@ exports.forgetPasswordConfirm = async (req, res) => {
   try {
     const { email, reset_key } = req.body;
 
-    const users = await db.query(
-  'SELECT user_id FROM users WHERE user_email = $1 AND reset_code = $2 AND reset_expires > NOW()',
-  [email, reset_key]
-);
+    const userResult = await db.query(
+      'SELECT user_id FROM users WHERE user_email = $1 AND reset_code = $2 AND reset_expires > NOW()',
+      [email, reset_key]
+    );
 
-
-    if (users.length === 0) {
+    if (userResult.rows.length === 0) {
       return res.status(400).json({
         error: true,
         message: 'Invalid or expired reset code'
@@ -612,13 +594,13 @@ exports.forgetPasswordReset = async (req, res) => {
       });
     }
 
-    await db.query(
-  'UPDATE users SET user_password = $1, reset_code = NULL, reset_expires = NULL WHERE user_id = $2',
-  [hashedPassword, users.rows[0].user_id]
-);
+    // Verify reset code first
+    const userResult = await db.query(
+      'SELECT user_id FROM users WHERE user_email = $1 AND reset_code = $2 AND reset_expires > NOW()',
+      [email, reset_key]
+    );
 
-
-    if (users.length === 0) {
+    if (userResult.rows.length === 0) {
       return res.status(400).json({
         error: true,
         message: 'Invalid or expired reset code'
@@ -627,9 +609,9 @@ exports.forgetPasswordReset = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    await db.execute(
-      'UPDATE users SET user_password = ?, reset_code = NULL, reset_expires = NULL WHERE user_id = ?',
-      [hashedPassword, users[0].user_id]
+    await db.query(
+      'UPDATE users SET user_password = $1, reset_code = NULL, reset_expires = NULL WHERE user_id = $2',
+      [hashedPassword, userResult.rows[0].user_id]
     );
 
     res.json({
@@ -653,28 +635,27 @@ exports.resendActivation = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const users = await db.query(
-  'SELECT user_id, user_firstname, user_lastname, business_name, account_type FROM users WHERE user_email = $1 AND account_status = \'approved\'',
-  [email]
-);
+    const userResult = await db.query(
+      `SELECT user_id, user_firstname, user_lastname, business_name, account_type 
+       FROM users WHERE user_email = $1 AND account_status = 'approved'`,
+      [email]
+    );
 
-
-    if (users.length === 0) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({
         error: true,
         message: 'Email not found or account not approved'
       });
     }
 
-    const user = users[0];
+    const user = userResult.rows[0];
     const newActivationCode = generateActivationCode();
     const activationExpires = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
     await db.query(
-  'UPDATE users SET activation_code = $1, activation_expires = $2 WHERE user_id = $3',
-  [newActivationCode, activationExpires, user.user_id]
-);
-
+      'UPDATE users SET activation_code = $1, activation_expires = $2 WHERE user_id = $3',
+      [newActivationCode, activationExpires, user.user_id]
+    );
 
     const recipientName = user.account_type === 'business' 
       ? user.business_name 
@@ -712,8 +693,6 @@ exports.resendActivation = async (req, res) => {
  */
 exports.signOut = async (req, res) => {
   try {
-    // In a real app, you might want to blacklist the token
-    // For now, we'll just return success
     res.json({
       success: true,
       message: 'Logged out successfully'
