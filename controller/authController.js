@@ -67,7 +67,7 @@ exports.signup = async (req, res) => {
 
     // Check if email already exists
     const existingEmail = await client.query(
-      'SELECT id FROM users WHERE user_email = $1',
+      'SELECT user_id FROM users WHERE user_email = $1',
       [user_email]
     );
 
@@ -83,7 +83,7 @@ exports.signup = async (req, res) => {
     // Check if NIN already exists (for personal accounts)
     if (account_type === 'personal' && nin_number) {
       const existingNIN = await client.query(
-        'SELECT id FROM users WHERE nin_number = $1',
+        'SELECT user_id FROM users WHERE nin_number = $1',
         [nin_number]
       );
 
@@ -100,7 +100,7 @@ exports.signup = async (req, res) => {
     // Check if business registration number exists (for business accounts)
     if (account_type === 'business' && CAC_number) {
       const existingBusiness = await client.query(
-        'SELECT id FROM users WHERE CAC_number = $1',
+        'SELECT user_id FROM users WHERE CAC_number = $1',
         [CAC_number]
       );
 
@@ -123,18 +123,29 @@ exports.signup = async (req, res) => {
 
     // Insert user
     const userResult = await client.query(
-      `INSERT INTO users 
-       (user_firstname, user_lastname, user_gender, user_phone, nin_number, 
-        user_email, user_password, address, account_status, account_type, 
-        business_name, business_type, CAC_number, business_location)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending', $10, $11, $12, $13, $14)
-       RETURNING user_id`,
-      [
-        user_firstname, user_lastname, user_gender, user_phone, nin_number,
-        user_email, hashedPassword, address, account_type,
-        business_name, business_type, CAC_number, business_location
-      ]
-    );
+  `INSERT INTO users 
+   (user_name, user_firstname, user_lastname, user_gender, user_phone, nin_number, 
+    user_email, user_password, address, account_type, 
+    business_name, business_type, CAC_number, business_location)
+   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+   RETURNING user_id`,
+  [
+    user_name, 
+    user_firstname, 
+    user_lastname, 
+    user_gender, 
+    user_phone, 
+    nin_number,
+    user_email, 
+    hashedPassword, 
+    address, 
+    account_type,
+    business_name, 
+    business_type, 
+    CAC_number, 
+    business_location
+  ]
+);
 
     await client.query('COMMIT');
     client.release();
