@@ -74,18 +74,17 @@ exports.businessSignup = async (req, res) => {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(business_password, 12);
-    const user_name = business_name.toLowerCase().replace(/\s+/g, '');
 
     // Insert business user
     const userResult = await client.query(
       `INSERT INTO users 
-       (user_name, business_phone, 
-        business_email, business_password, account_type,
-        business_name, business_type, CAC_number, business_location)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'business', $9, $10, $11, $12)
+       (business_phone, 
+        business_email, business_password,
+        business_name, business_type, CAC_number, business_location, account_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'business')
        RETURNING user_id`,
       [
-        user_name, business_phone,
+        business_phone,
         business_email, hashedPassword, business_name, business_type,
         CAC_number, business_location
       ]
