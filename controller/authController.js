@@ -80,11 +80,11 @@ exports.personalSignup = async (req, res) => {
     // Insert personal user
     const userResult = await client.query(
       `INSERT INTO users 
-       (user_name, user_firstname, user_lastname, user_gender, user_phone, nin_number, 
+       (user_firstname, user_lastname, user_gender, user_phone, nin_number, 
         user_email, user_password, address, account_type)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'personal')
        RETURNING user_id`,
-      [user_name, user_firstname, user_lastname, user_gender, user_phone, 
+      [user_firstname, user_lastname, user_gender, user_phone, 
        nin_number, user_email, hashedPassword, address]
     );
 
