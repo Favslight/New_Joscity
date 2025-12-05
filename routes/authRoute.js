@@ -1,8 +1,8 @@
 // routes/authRoutes.js
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/authController');
-const businessController = require('../controllers/businessController');
+const authController = require('../controller/authController');
+const businessController = require('../controller/businessController');
 
 // Personal routes
 router.post('/personal/signup', authController.personalSignup);
