@@ -73,7 +73,7 @@ exports.businessSignup = async (req, res) => {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(user_password, 12);
+    const hashedPassword = await bcrypt.hash(business_password, 12);
     const user_name = business_name.toLowerCase().replace(/\s+/g, '');
 
     // Insert business user
@@ -136,7 +136,7 @@ exports.businessSignup = async (req, res) => {
  */
 exports.businessSignIn = async (req, res) => {
   try {
-    const { email, password, activation_code } = req.body;
+    const { business_email, business_password, activation_code } = req.body;
 
     // Find business user
     const userResult = await query(
@@ -144,7 +144,7 @@ exports.businessSignIn = async (req, res) => {
               account_status, activation_code, activation_expires, is_verified, 
               business_name, user_verified
        FROM users WHERE business_email = $1 AND account_type = 'business'`,
-      [email]
+      [business_email]
     );
 
     if (userResult.rows.length === 0) {
@@ -190,7 +190,7 @@ exports.businessSignIn = async (req, res) => {
     }
 
     // Verify password
-    const validPassword = await bcrypt.compare(password, user.user_password);
+    const validPassword = await bcrypt.compare(business_password, user.business_password);
     if (!validPassword) {
       return res.status(401).json({
         error: true,
@@ -210,7 +210,7 @@ exports.businessSignIn = async (req, res) => {
     const token = jwt.sign(
       { 
         user_id: user.user_id, 
-        email: user.user_email,
+        email: user.business_email,
         is_verified: true,
         account_type: 'business'
       },
