@@ -5,8 +5,8 @@ const { adminAuth, superAdminAuth } = require('../../middleware/adminMiddleware'
 // Import all admin route modules
 const authRoutes = require('./auth');
 const dashboardRoutes = require('./dashboard');
-const usersRoutes = require('./users');
-const postsRoutes = require('./posts');
+const usersRoutes = require('./user');
+const postsRoutes = require('./post');
 const settingsRoutes = require('./settings');
 const pagesRoutes = require('./pages');
 const groupsRoutes = require('./groups');
