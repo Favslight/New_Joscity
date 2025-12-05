@@ -31,7 +31,7 @@ exports.businessSignup = async (req, res) => {
     } = req.body;
 
     // Business validation
-    if (!business_phone || !business_email || !business_password || business_location || !business_name || !business_type) {
+    if (!business_phone || !business_email || !business_password || !business_location || !business_name || !business_type) {
       return res.status(400).json({
         error: true,
         message: 'All fields are required'
