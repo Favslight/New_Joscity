@@ -1,18 +1,29 @@
+// routes/authRoutes.js
 const express = require('express');
 const router = express.Router();
-const authController = require('../controller/authController');
+const authController = require('../controllers/authController');
+const businessController = require('../controllers/businessController');
 
-// Public routes
-router.post('/signup', authController.signup);
-router.post('/signin', authController.signIn);
-router.post('/signout', authController.signOut);
+// Personal routes
+router.post('/personal/signup', authController.personalSignup);
+router.post('/personal/login', authController.personalSignIn);
 
-// Password reset routes
-router.post('/forget_password', authController.forgetPassword);
-router.post('/forget_password_confirm', authController.forgetPasswordConfirm);
-router.post('/forget_password_reset', authController.forgetPasswordReset);
+// Business routes
+router.post('/business/signup', businessController.businessSignup);
+router.post('/business/login', businessController.businessSignIn);
 
-// Activation routes
-router.post('/resend_activation', authController.resendActivation);
+// Shared routes (handled by authController)
+router.get('/admin/pending', authController.getPendingApprovals);
+router.post('/admin/approve', authController.approveAccount);
+router.post('/admin/reject', authController.rejectAccount);
+router.post('/forgot-password', authController.forgetPassword);
+router.post('/confirm-reset', authController.forgetPasswordConfirm);
+router.post('/reset-password', authController.forgetPasswordReset);
+router.post('/resend-activation', authController.resendActivation);
+router.post('/logout', authController.signOut);
+
+// Business-specific routes
+router.get('/business/profile', businessController.getBusinessProfile);
+router.put('/business/update', businessController.updateBusinessDetails);
 
 module.exports = router;
