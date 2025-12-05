@@ -1,8 +1,8 @@
 //This code is to authenticate the user/business
 const express = require('express');
 const router = express.Router();
-const authController = require('../../controllers/authController');
-const { adminAuth } = require('../../middleware/authMiddleware');
+const authController = require('../../controller/authController');
+const { adminAuth } = require('../../middleware/adminMiddleware');
 
 // Admin approval routes
 router.get('/pending', adminAuth, authController.getPendingApprovals);

@@ -43,7 +43,7 @@ exports.businessSignup = async (req, res) => {
     // Check if email exists
     const existingEmail = await client.query(
       'SELECT user_id FROM users WHERE user_email = $1',
-      [user_email]
+      [business_email]
     );
 
     if (existingEmail.rows.length > 0) {

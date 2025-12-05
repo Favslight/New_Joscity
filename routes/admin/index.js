@@ -1,0 +1,59 @@
+const express = require('express');
+const router = express.Router();
+const { adminAuth, superAdminAuth } = require('../../middleware/adminMiddleware');
+
+// Import all admin route modules
+const authRoutes = require('./auth');
+const dashboardRoutes = require('./dashboard');
+const usersRoutes = require('./users');
+const postsRoutes = require('./posts');
+const settingsRoutes = require('./settings');
+const pagesRoutes = require('./pages');
+const groupsRoutes = require('./groups');
+const eventsRoutes = require('./events');
+const reportsRoutes = require('./reports');
+const verificationRoutes = require('./verification');
+const walletRoutes = require('./wallet');
+const adsRoutes = require('./ads');
+const proRoutes = require('./pro');
+const affiliatesRoutes = require('./affiliates');
+const pointsRoutes = require('./points');
+const marketRoutes = require('./market');
+const fundingRoutes = require('./funding');
+const monetizationRoutes = require('./monetization');
+const jobsRoutes = require('./jobs');
+const moviesRoutes = require('./movies');
+const earningsRoutes = require('./earnings');
+const announcementsRoutes = require('./announcements');
+const notificationsRoutes = require('./notifications');
+const pwaRoutes = require('./pwa');
+const developersRoutes = require('./developers');
+
+// Mount admin routes
+router.use('/auth', authRoutes);
+router.use('/dashboard', adminAuth, dashboardRoutes);
+router.use('/users', adminAuth, usersRoutes);
+router.use('/posts', adminAuth, postsRoutes);
+router.use('/settings', adminAuth, settingsRoutes);
+router.use('/pages', adminAuth, pagesRoutes);
+router.use('/groups', adminAuth, groupsRoutes);
+router.use('/events', adminAuth, eventsRoutes);
+router.use('/reports', adminAuth, reportsRoutes);
+router.use('/verification', adminAuth, verificationRoutes);
+router.use('/wallet', adminAuth, walletRoutes);
+router.use('/ads', adminAuth, adsRoutes);
+router.use('/pro', adminAuth, proRoutes);
+router.use('/affiliates', adminAuth, affiliatesRoutes);
+router.use('/points', adminAuth, pointsRoutes);
+router.use('/market', adminAuth, marketRoutes);
+router.use('/funding', adminAuth, fundingRoutes);
+router.use('/monetization', adminAuth, monetizationRoutes);
+router.use('/jobs', adminAuth, jobsRoutes);
+router.use('/movies', adminAuth, moviesRoutes);
+router.use('/earnings', adminAuth, earningsRoutes);
+router.use('/announcements', adminAuth, announcementsRoutes);
+router.use('/notifications', adminAuth, notificationsRoutes);
+router.use('/pwa', adminAuth, pwaRoutes);
+router.use('/developers', adminAuth, developersRoutes);
+
+module.exports = router;
