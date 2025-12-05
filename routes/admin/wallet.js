@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const walletController = require('../../controllers/admin/walletController');
+const walletController = require('../../controller/admin/walletController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
 router.get('/payments', adminAuth, walletController.getWalletPaymentRequests);

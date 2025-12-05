@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const eventsController = require('../../controllers/admin/eventsController');
+const eventsController = require('../../controller/admin/eventsController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
 router.get('/', adminAuth, eventsController.getEvents);

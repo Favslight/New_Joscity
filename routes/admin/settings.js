@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const settingsController = require('../../controllers/admin/settingsController');
+const settingsController = require('../../controller/admin/settingsController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
 router.get('/', adminAuth, settingsController.getSettings);

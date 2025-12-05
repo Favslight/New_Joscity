@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const proController = require('../../controllers/admin/proController');
+const proController = require('../../controller/admin/proController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
 // Packages

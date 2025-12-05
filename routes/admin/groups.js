@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const groupsController = require('../../controllers/admin/groupsController');
+const groupsController = require('../../controller/admin/groupsController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
 router.get('/', adminAuth, groupsController.getGroups);

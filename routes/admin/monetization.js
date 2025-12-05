@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const monetizationController = require('../../controllers/admin/monetizationController');
+const monetizationController = require('../../controller/admin/monetizationController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
 router.get('/payments', adminAuth, monetizationController.getMonetizationPayments);

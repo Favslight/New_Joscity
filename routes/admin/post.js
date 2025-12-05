@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const postsController = require('../../controllers/admin/postsController');
+const postsController = require('../../controller/admin/postsController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
 router.get('/', adminAuth, postsController.getPosts);

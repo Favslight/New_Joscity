@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const fundingController = require('../../controllers/admin/fundingController');
+const fundingController = require('../../controller/admin/fundingController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
 // Funding Requests

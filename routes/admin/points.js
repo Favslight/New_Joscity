@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pointsController = require('../../controllers/admin/pointsController');
+const pointsController = require('../../controller/admin/pointsController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
 router.get('/payments', adminAuth, pointsController.getPointsPayments);

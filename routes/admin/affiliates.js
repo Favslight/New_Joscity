@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const affiliatesController = require('../../controllers/admin/affiliatesController');
+const affiliatesController = require('../../controller/admin/affiliatesController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
 router.get('/payments', adminAuth, affiliatesController.getAffiliatePayments);
