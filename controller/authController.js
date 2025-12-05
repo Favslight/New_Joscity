@@ -82,7 +82,7 @@ exports.personalSignup = async (req, res) => {
       `INSERT INTO users 
        (user_firstname, user_lastname, user_gender, user_phone, nin_number, 
         user_email, user_password, address, account_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'personal')
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'personal')
        RETURNING user_id`,
       [user_firstname, user_lastname, user_gender, user_phone, 
        nin_number, user_email, hashedPassword, address]
