@@ -30,9 +30,10 @@ const monetizationRoutes = require('./monetization');
 //const developersRoutes = require('./developers');
 
 // Mount admin routes
+router.use('/', require('./adminAuthe'));
 router.use('/auth', authRoutes);
 router.use('/dashboard', adminAuth, dashboardRoutes);
-router.use('/users', adminAuth, usersRoutes);
+router.use('/user', adminAuth, usersRoutes);
 router.use('/posts', adminAuth, postsRoutes);
 router.use('/settings', adminAuth, settingsRoutes);
 router.use('/pages', adminAuth, pagesRoutes);
