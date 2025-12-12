@@ -23,18 +23,22 @@ const getDashboardInsights = async () => {
   // Total users
   const users = await db.query('SELECT COUNT(*) as count FROM users');
   insights.totalUsers = users.rows[0].count;
+  console.log('✅ Total users query completed');
   
   // Pending approvals
   const pending = await db.query('SELECT COUNT(*) as count FROM users WHERE user_approved = $1 AND account_status = $2', [false, 'pending']);
   insights.pendingApprovals = pending.rows[0].count;
+  console.log('✅ Total users query completed');
   
   // Not activated
   const notActivated = await db.query('SELECT COUNT(*) as count FROM users WHERE user_activated = $1', [false]);
   insights.notActivated = notActivated.rows[0].count;
+  console.log('✅ Not activated query completed');
   
   // Banned users
   const banned = await db.query('SELECT COUNT(*) as count FROM users WHERE user_banned = $1', [true]);
   insights.bannedUsers = banned.rows[0].count;
+  console.log('✅ Banned users query completed');
   
   // Online users (last 15 minutes)
   const online = await db.query('SELECT COUNT(*) as count FROM users WHERE user_last_seen >= NOW() - INTERVAL $1', ['15 minutes']);
