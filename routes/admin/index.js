@@ -32,7 +32,7 @@ const monetizationRoutes = require('./monetization');
 // Mount admin routes
 router.use('/', require('./adminAuthe'));
 router.use('/auth', authRoutes);
-router.use('/dashboard', adminAuth, dashboardRoutes);
+router.use('/dashboard', dashboardRoutes);
 router.use('/user', adminAuth, usersRoutes);
 router.use('/posts', adminAuth, postsRoutes);
 router.use('/settings', adminAuth, settingsRoutes);
