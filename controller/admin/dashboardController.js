@@ -41,7 +41,10 @@ const getDashboardInsights = async () => {
   console.log('✅ Banned users query completed');
   
   // Online users (last 15 minutes)
-  const online = await db.query('SELECT COUNT(*) as count FROM users WHERE user_last_seen >= NOW() - INTERVAL $1', ['15 minutes']);
+  const online = await db.query(
+  'SELECT COUNT(*) as count FROM users WHERE user_last_seen >= NOW() - ($1 * interval \'1 minute\')',
+  [15]
+  );
   insights.onlineUsers = online.rows[0].count;
   
   // Total posts
