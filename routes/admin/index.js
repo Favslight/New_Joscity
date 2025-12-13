@@ -35,7 +35,7 @@ router.use('/auth', authRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/user', adminAuth, usersRoutes);
 router.use('/posts', adminAuth, postsRoutes);
-router.use('/settings', adminAuth, settingsRoutes);
+router.use('/settings', settingsRoutes);
 router.use('/pages', adminAuth, pagesRoutes);
 router.use('/groups', adminAuth, groupsRoutes);
 router.use('/events', adminAuth, eventsRoutes);

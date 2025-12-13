@@ -3,9 +3,9 @@ const router = express.Router();
 const settingsController = require('../../controller/admin/settingsController');
 const { adminAuth } = require('../../middleware/adminMiddleware');
 
-router.get('/', adminAuth, settingsController.getSettings);
-router.put('/', adminAuth, settingsController.updateSettings);
-router.get('/registration', adminAuth, settingsController.getRegistrationSettings);
-router.put('/registration', adminAuth, settingsController.updateRegistrationSettings);
+router.get('/', settingsController.getSettings);
+router.put('/', settingsController.updateSettings);
+router.get('/registration', settingsController.getRegistrationSettings);
+router.put('/registration', settingsController.updateRegistrationSettings);
 
 module.exports = router;
